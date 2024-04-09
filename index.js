@@ -33,7 +33,7 @@ async function run() {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,{
         expiresIn: "1h",
-      });
+      }); 
       console.log("jwt token", token);
       res.send({ token });
     });
@@ -118,9 +118,40 @@ async function run() {
       const result = await productCollection.find().toArray();
       res.send(result);
     });
-    app.post("/product", async (req, res) => {
+    app.get("/product/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.findOne(query);
+      res.send(result);
+      
+    })
+    app.post("/product", verifyToken,verifyAdmin, async (req, res) => {
       const product = req.body;
       const result = await productCollection.insertOne(product);
+      res.send(result);
+      
+    })
+   app.patch("/product/:id", async (req, res) => {
+    const product = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+    
+      const updateDoc = {
+        $set: {
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          IssueDate: product.IssueDate,
+          img: product.img,
+        }
+      }
+      const result = await productCollection.updateOne(filter, updateDoc);
+      res.send(result);
+   })
+    app.delete("/product/:id", verifyToken,verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.deleteOne(query);
       res.send(result);
       
     })
